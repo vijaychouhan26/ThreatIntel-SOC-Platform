@@ -1,0 +1,14 @@
+[Unit]
+Description=ThreatIntel reverse SSH tunnel to Wazuh VM
+After=network-online.target threatintel-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ssh -F /dev/null -NT -i @USER_HOME@/.ssh/id_ed25519_wazuh_cti -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=@PROJECT_DIR@/work/wazuh-known-hosts -R 127.0.0.1:18006:127.0.0.1:8006 ubuntuser@192.168.56.101
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

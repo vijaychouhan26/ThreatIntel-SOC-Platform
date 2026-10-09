@@ -16,3 +16,9 @@ dist/
 # Logs & OS
 *.log
 .DS_Store
+
+# Local runtime state and backups
+work/
+backups/
+*.dump
+*.sql.gz

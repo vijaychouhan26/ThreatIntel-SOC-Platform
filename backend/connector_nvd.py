@@ -12,8 +12,8 @@ NVD_KEY = os.getenv("NVD_KEY")
 NVD_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 HEADERS = {"apiKey": NVD_KEY}
 
-# test ke liye kitne CVEs enrich karne hain (poora karne ke liye None)
-LIMIT = None
+# Ek run me kitne CVEs enrich karne hain (0/unset = all)
+LIMIT = int(os.getenv("NVD_LIMIT", "0")) or None
 
 conn = psycopg2.connect(
     host=os.getenv("DB_HOST"), port=os.getenv("DB_PORT"),
@@ -32,12 +32,11 @@ def insert_raw(kind, payload):
     )
     return cur.rowcount == 1
 
-# CISA KEV se CVE IDs uthao
+# Continue from CVEs that still lack NVD metadata, rather than re-fetching old records.
 cur.execute("""
-    SELECT DISTINCT data->>'cveID'
-    FROM raw_items
-    WHERE source='cisa_kev' AND data->>'cveID' IS NOT NULL
-    ORDER BY 1
+    SELECT cve_id FROM cves
+    WHERE kev_listed=true AND cvss_score IS NULL
+    ORDER BY cve_id
 """)
 cve_ids = [r[0] for r in cur.fetchall()]
 if LIMIT:
@@ -79,6 +78,21 @@ for i, cve_id in enumerate(cve_ids, 1):
                 desc = d.get("value", "")
                 break
 
+        # references
+        refs = [r.get("url") for r in cve.get("references", []) if r.get("url")]
+
+        # affected products (CPE)
+        affected = []
+        for conf in cve.get("configurations", []):
+            for node in conf.get("nodes", []):
+                for match in node.get("cpeMatch", []):
+                    cpe = match.get("criteria")
+                    if cpe:
+                        parts = cpe.split(":")
+                        if len(parts) >= 5:
+                            affected.append(f"{parts[3]}:{parts[4]}")
+        affected = list(set(affected))
+
         record = {
             "cve_id": cve.get("id"),
             "cvss_score": cvss,
@@ -86,6 +100,8 @@ for i, cve_id in enumerate(cve_ids, 1):
             "description": desc,
             "published": cve.get("published"),
             "last_modified": cve.get("lastModified"),
+            "references": refs,
+            "affected_products": affected,
         }
         if insert_raw("cve_detail", record):
             inserted += 1

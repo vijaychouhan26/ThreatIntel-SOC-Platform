@@ -28,13 +28,17 @@ for (d,) in rows:
             cvss_score  = %s,
             severity    = %s,
             description = COALESCE(%s, description),
-            published   = COALESCE(published, %s::timestamptz)
+            published   = COALESCE(published, %s::timestamptz),
+            "references" = %s,
+            affected_products = %s
         WHERE cve_id = %s
     """, (
         d.get("cvss_score"),
         d.get("severity"),
         d.get("description"),
         d.get("published"),
+        d.get("references", []),
+        d.get("affected_products", []),
         cve_id,
     ))
     if cur.rowcount > 0:

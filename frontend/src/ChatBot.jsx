@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { MessageSquare, X, Send, Bot, User, Loader } from 'lucide-react'
-import API from './api'
+import { sendChatMessage } from './api'
 
 export default function ChatBot() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { role: 'bot', text: 'Hi! Ask me about your threat data. Try: "show Bianlian IPs" or "how many critical CVEs".' },
+    { role: 'bot', text: 'Hi! Ask about your threat data. Try: "show VirusTotal detections", "show malicious GreyNoise IPs", or "what techniques does APT29 use".' },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,17 +20,19 @@ export default function ChatBot() {
     setInput('')
     setLoading(true)
     try {
-      const res = await API.post('/chat', { question: q }).then(r => r.data)
+      const res = await sendChatMessage(q)
       if (res.error) {
         setMessages(m => [...m, { role: 'bot', text: `⚠ ${res.error}`, sql: res.sql }])
+      } else if (res.message) {
+        setMessages(m => [...m, { role: 'bot', text: res.message }])
       } else {
         setMessages(m => [...m, {
           role: 'bot',
-          text: res.count === 0 ? 'No results found.' : `Found ${res.count} result(s):`,
-          rows: res.rows, sql: res.sql,
+          text: res.answer || (res.count === 0 ? 'No results found.' : `Found ${res.count} result(s):`),
+          rows: res.rows, sql: res.sql, explanation: res.explanation
         }])
       }
-    } catch (e) {
+    } catch {
       setMessages(m => [...m, { role: 'bot', text: '⚠ Something went wrong. Try rephrasing.' }])
     }
     setLoading(false)
@@ -96,6 +98,14 @@ export default function ChatBot() {
                   }}>
                     {m.text}
                   </div>
+                  {m.explanation && (
+                    <div style={{
+                      marginTop: 6, fontSize: 12, color: '#6b7688', fontStyle: 'italic',
+                      padding: '6px 10px', background: '#f8fafc', borderRadius: 6, border: '1px solid #e4e8ee'
+                    }}>
+                      {m.explanation}
+                    </div>
+                  )}
 
                   {/* result table */}
                   {m.rows && m.rows.length > 0 && (

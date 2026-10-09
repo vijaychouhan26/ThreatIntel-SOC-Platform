@@ -1,0 +1,17 @@
+[Unit]
+Description=ThreatIntel FastAPI service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=@PROJECT_DIR@
+Environment=START_WAZUH_TUNNEL=false
+Environment=API_HOST=127.0.0.1
+ExecStart=@PROJECT_DIR@/start_backend.sh
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

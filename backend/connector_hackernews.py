@@ -49,11 +49,16 @@ def fetch_full_article(url):
         return None
 
 print(f"Fetching feed: {FEED_URL}")
-feed = feedparser.parse(FEED_URL)
-print(f"Found {len(feed.entries)} articles in feed\n")
+try:
+    feed = feedparser.parse(FEED_URL)
+    entries = feed.entries
+except Exception as e:
+    print(f"Failed to parse feed: {e}")
+    entries = []
+print(f"Found {len(entries)} articles in feed\n")
 
 inserted = 0
-for i, entry in enumerate(feed.entries, 1):
+for i, entry in enumerate(entries, 1):
     title = entry.get("title", "")
     link = entry.get("link", "")
     published = entry.get("published", "")
@@ -71,7 +76,7 @@ for i, entry in enumerate(feed.entries, 1):
     }
     if insert_raw("article", article):
         inserted += 1
-    print(f"  [{i}/{len(feed.entries)}] {len(full_text or '')} chars | {title[:50]}")
+    print(f"  [{i}/{len(entries)}] {len(full_text or '')} chars | {title[:50]}")
     time.sleep(1)  # polite delay, server pe load na pade
 
 conn.commit()

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Shield, Lock, Terminal } from 'lucide-react'
-import { login } from './api'
+import { getAuthConfig, login } from './api'
 
 /* ---------- Animated cyber background (canvas) ---------- */
 function CyberBackground() {
@@ -100,22 +100,29 @@ function ThreatTicker() {
   )
 }
 
-export default function Login({ onSuccess }) {
+export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [mfaRequired, setMfaRequired] = useState(false)
+
+  useEffect(() => {
+    getAuthConfig()
+      .then((config) => setMfaRequired(Boolean(config.mfa_required)))
+      .catch(() => setMfaRequired(true))
+  }, [])
 
   async function handleLogin(e) {
     e.preventDefault()
     setError(''); setLoading(true)
     try {
-      const { token } = await login(username, password, otp)
+      const { token } = await login(username, password, mfaRequired ? otp : '')
       localStorage.setItem('ti_token', token)
       window.location.reload()
-    } catch (err) {
-      setError('ACCESS DENIED — invalid credentials or OTP')
+    } catch {
+      setError(mfaRequired ? 'ACCESS DENIED — invalid credentials or OTP' : 'ACCESS DENIED — invalid username or password')
       setLoading(false)
     }
   }
@@ -181,7 +188,7 @@ export default function Login({ onSuccess }) {
         </div>
 
         <form onSubmit={handleLogin}>
-          {['username', 'password', 'otp'].map((field) => {
+          {['username', 'password', ...(mfaRequired ? ['otp'] : [])].map((field) => {
             const val = field === 'username' ? username : field === 'password' ? password : otp
             const set = field === 'username' ? setUsername : field === 'password' ? setPassword : setOtp
             return (
@@ -225,7 +232,7 @@ export default function Login({ onSuccess }) {
           textAlign: 'center', marginTop: 18, fontSize: 11, color: '#5b6b85',
           fontFamily: 'monospace',
         }}>
-          🔒 MFA PROTECTED · TLS ENCRYPTED
+          🔒 {mfaRequired ? 'MFA PROTECTED' : 'PASSWORD PROTECTED'} · LOCAL ACCESS ONLY
         </div>
       </div>
     </div>

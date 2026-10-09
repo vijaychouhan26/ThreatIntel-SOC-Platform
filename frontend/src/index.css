@@ -130,3 +130,111 @@ tbody tr { transition: background 0.12s ease; }
 
 /* logout ko sidebar ke neeche push karo */
 .sidebar { display: flex; flex-direction: column; }
+
+/* Pagination Styles */
+.pagination { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-top: 1px solid var(--border); background: var(--card); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+.pagination-controls { display: flex; align-items: center; gap: 8px; }
+.page-btn { padding: 6px 12px; border: 1px solid var(--border); background: var(--card); border-radius: 6px; cursor: pointer; color: var(--text); font-size: 13px; font-weight: 500; transition: all 0.15s; display: flex; align-items: center; gap: 4px; }
+.page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.page-btn:not(:disabled):hover { background: var(--bg); }
+.page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* External Link Badges */
+.ext-link-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; text-decoration: none; border: 1px solid var(--border); background: var(--bg); color: var(--text); transition: all 0.15s; }
+.ext-link-badge:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); transform: translateY(-1px); }
+
+/* Error Banner */
+.error-banner { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--critical-bg); border: 1px solid rgba(220, 38, 38, 0.3); border-radius: 8px; color: var(--critical); font-size: 14px; margin-bottom: 16px; font-weight: 500; }
+.error-banner .retry-btn { padding: 4px 10px; background: var(--critical); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; transition: background 0.15s; }
+.error-banner .retry-btn:hover { background: #b91c1c; }
+
+/* Tag/Chip Styles */
+.tag-chip { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; background: var(--bg); border: 1px solid var(--border); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.02em; }
+.tag-chip.alias { background: #fefce8; color: #a16207; border-color: #fef08a; }
+.tag-chip.sector { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.tag-chip.malware { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+
+/* ===== LEVEL 2: CORRELATION + ATT&CK ===== */
+.correlation-stats {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px;
+  margin-bottom: 20px;
+}
+.stat-card.compact { padding: 16px; }
+.stat-card.compact .stat-value { font-size: 23px; }
+.evidence-card { overflow: hidden; }
+.evidence-flow { display: flex; flex-wrap: wrap; gap: 10px; }
+.evidence-edge {
+  display: grid; grid-template-columns: auto auto auto; align-items: center; gap: 7px;
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc;
+  text-transform: capitalize;
+}
+.evidence-edge strong { color: var(--primary); }
+.evidence-edge small { grid-column: 1 / -1; color: var(--text-muted); text-transform: none; }
+.table-toolbar {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 18px 20px; border-bottom: 1px solid var(--border);
+}
+.table-scroll { overflow-x: auto; }
+.detail-panel {
+  position: fixed; top: 0; right: 0; width: 520px; height: 100vh; background: #fff;
+  border-left: 1px solid var(--border); box-shadow: -4px 0 24px rgba(16,24,40,0.12);
+  padding: 24px; overflow-y: auto; z-index: 100; animation: slideInRight .2s ease;
+}
+.correlation-panel { width: min(680px, 88vw); }
+.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.panel-section { font-size: 14px; margin-top: 24px; margin-bottom: 10px; }
+.correlation-chain {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 13px;
+  border-radius: 10px; background: linear-gradient(90deg, #eff6ff, #f5f3ff); color: #344054;
+}
+.correlation-chain span { background: #fff; border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; }
+.mini-evidence { display: flex; flex-direction: column; padding: 11px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border); }
+.mini-evidence span { color: var(--text-muted); font-size: 12px; }
+.evidence-record { padding: 12px; margin-bottom: 8px; }
+.evidence-link { display: flex; flex-direction: column; text-decoration: none; color: var(--text); }
+.empty-evidence { padding: 14px; border: 1px dashed #cbd5e1; border-radius: 9px; color: var(--text-muted); background: #f8fafc; }
+.chip-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
+.attack-layout { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); margin: 20px 0; }
+.tactic-list { display: flex; flex-direction: column; gap: 12px; }
+.tactic-row { display: grid; grid-template-columns: 160px 1fr 36px; align-items: center; gap: 12px; text-transform: capitalize; }
+.tactic-row > div:first-child { display: flex; flex-direction: column; }
+.tactic-row span { color: var(--text-muted); font-size: 11px; }
+.coverage-track { height: 8px; border-radius: 10px; overflow: hidden; background: #eef2f7; }
+.coverage-track > div { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2563eb, #7c3aed); }
+.tactic-row b { text-align: right; color: #475467; }
+.attack-toolbar { padding-left: 0; padding-right: 0; border: 0; }
+.attack-group-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.attack-group { cursor: pointer; }
+.attack-group-head { display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+.attack-counts { display: flex; gap: 16px; margin: 15px 0 12px; color: var(--text-muted); font-size: 12px; }
+.attack-counts b { color: var(--text); font-size: 17px; }
+
+.investigation-hero { display: grid; grid-template-columns: 1fr minmax(420px, .9fr); gap: 28px; align-items: center; margin-bottom: 20px; background: linear-gradient(135deg, #fff, #f5f3ff); }
+.investigation-form { display: grid; grid-template-columns: 150px 1fr auto; gap: 8px; }
+.investigation-form .input { min-width: 0; }
+.investigate-btn { display: inline-flex; align-items: center; gap: 7px; border: 0; border-radius: 8px; padding: 9px 14px; background: linear-gradient(135deg, #6d28d9, #2563eb); color: #fff; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.investigate-btn:disabled { opacity: .55; cursor: wait; }
+.investigation-evidence { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.investigation-evidence .mini-evidence strong { font-size: 22px; color: #7c3aed; }
+.investigation-report { border-top: 3px solid #7c3aed; }
+.report-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 18px; }
+.report-body { white-space: pre-wrap; font-size: 14px; line-height: 1.75; color: #344054; }
+.siem-setup-banner { display: flex; gap: 12px; align-items: center; padding: 14px 16px; margin-bottom: 18px; border: 1px solid #fed7aa; border-radius: 10px; background: #fff7ed; color: #9a3412; }
+.siem-setup-banner > div { display: flex; flex-direction: column; }
+.siem-setup-banner span { font-size: 12px; margin-top: 2px; }
+.siem-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 1180px) {
+  .correlation-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .attack-group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .investigation-hero { grid-template-columns: 1fr; }
+}
+@media (max-width: 850px) {
+  .sidebar { width: 200px; }
+  .main { margin-left: 200px; max-width: calc(100vw - 200px); padding: 22px; }
+  .correlation-stats, .attack-group-grid, .attack-layout { grid-template-columns: 1fr; }
+  .table-toolbar { align-items: stretch; flex-direction: column; }
+  .tactic-row { grid-template-columns: 130px 1fr 32px; }
+  .investigation-form { grid-template-columns: 1fr; }
+  .investigation-evidence, .siem-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

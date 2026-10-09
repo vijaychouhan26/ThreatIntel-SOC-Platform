@@ -31,7 +31,12 @@ def insert_raw(kind, payload):
 
 # 1. saare groups ka index lo
 print("Fetching group index...")
-idx = requests.get(f"{RL_BASE}/iocs", headers=HEADERS, timeout=30).json()
+try:
+    r_idx = requests.get(f"{RL_BASE}/iocs", headers=HEADERS, timeout=30)
+    idx = r_idx.json()
+except Exception as e:
+    print(f"Failed to fetch or decode group index: {e}")
+    idx = {}
 groups = [g["group"] for g in idx.get("groups", [])]
 print(f"Found {len(groups)} groups")
 
@@ -46,7 +51,12 @@ for i, group in enumerate(groups, 1):
             print(f"  [{i}/{len(groups)}] {group}: HTTP {r.status_code}, skip")
             time.sleep(1)
             continue
-        data = r.json()
+        try:
+            data = r.json()
+        except Exception as e:
+            print(f"  [{i}/{len(groups)}] {group}: JSON parse error (upstream HTML error?): {e}")
+            time.sleep(1)
+            continue
         iocs = data.get("iocs", {})
 
         # har type (ip, md5, sha256, btc, mail...) ki har value ek raw row

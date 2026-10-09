@@ -13,7 +13,7 @@
 
 ## 📖 Overview
 
-This platform automates the full CTI lifecycle: **collect → normalize → enrich → score → serve**. It pulls threat data from five public feeds, resolves it into a clean, deduplicated database with a **sighting-tracking model** (so a recurring indicator is recorded, not duplicated), enriches indicators using **third-party reputation/infrastructure APIs** and a **local LLM**, assigns each indicator a **composite risk score**, and presents everything through an authenticated HTTPS dashboard — including an **"ask your data" chatbot** that converts plain-English questions into safe SQL.
+This platform automates the full CTI lifecycle: **collect → normalize → enrich → score → serve**. It pulls threat data from multiple public feeds, resolves it into a clean, deduplicated database with a **sighting-tracking model** (so a recurring indicator is recorded, not duplicated), enriches indicators using **third-party reputation/infrastructure APIs** and a **local LLM**, assigns each indicator a **composite risk score**, and presents everything through an authenticated dashboard with an HTTPS deployment profile — including an **"ask your data" chatbot** that converts plain-English questions into safe SQL.
 
 Built end-to-end as a hands-on SOC/DevSecOps project: data engineering, backend APIs, frontend, enrichment, automation, and production-grade security hardening.
 
@@ -53,6 +53,10 @@ Built end-to-end as a hands-on SOC/DevSecOps project: data engineering, backend 
 | **CVE intelligence** | CVSS + severity (NVD) combined with actively-exploited flags (CISA KEV) |
 | **Interactive dashboard** | React SPA with drill-down, charts, risk breakdown, enrichment detail panels |
 | **AI chatbot** | Natural-language → SQL over the threat database (read-only, validated) |
+| **Threat correlation** | Evidence-backed IOC ↔ malware ↔ actor ↔ CVE ↔ sighting investigation clusters |
+| **MITRE ATT&CK analytics** | Tactic coverage, group-technique matrix, and actor-to-software mappings from STIX/TAXII |
+| **AI-assisted investigation** | Read-only, evidence-grounded analyst reports over stored IOC, malware, actor, CVE, sighting, and ATT&CK context |
+| **SIEM matching** | Token-protected Wazuh/Elastic JSON ingestion with exact local IOC/CVE matching and an auditable event trail |
 | **Full automation** | Cron pipeline: ingest → process → enrich → score, daily, with per-run logging |
 
 ---
@@ -130,6 +134,8 @@ Security was treated as a first-class concern, not an afterthought:
 - **TLS/HTTPS** — all traffic encrypted (nginx reverse proxy)
 - **Least privilege** — API + chatbot use a dedicated **read-only** database role; connectors use a separate write role
 - **Chatbot safety** — SELECT-only validation, forbidden-keyword blocking, single-statement enforcement, query timeout
+- **Investigation safety** — evidence-bounded prompts, no response actions, and a deterministic fallback when Ollama is unavailable
+- **SIEM trust boundary** — ingestion uses a dedicated `X-SIEM-Token`, separate from interactive dashboard JWT sessions
 - **CORS lockdown** — API accepts only the dashboard origin
 - **Security headers** — anti-clickjacking, MIME-sniffing protection
 - **Rate-limit-aware enrichment** — batched, throttled API calls with graceful 429 handling
@@ -156,6 +162,8 @@ Security was treated as a first-class concern, not an afterthought:
 - **`ioc_enrichment`** — AbuseIPDB + Shodan data per indicator
 - **`cves`** — CVSS + severity + KEV flag
 - **`articles` / `apt_groups`** — LLM-extracted intel
+- **`attack_software` / `apt_software`** — ATT&CK software catalogue and actor-to-software mappings
+- **`siem_events` / `siem_matches`** — original event payloads plus exact IOC/CVE matches and match provenance
 
 ---
 
@@ -164,24 +172,61 @@ Security was treated as a first-class concern, not an afterthought:
 > Prerequisites: Docker, Python 3.12, Node.js 20, Ollama with `llama3.2`
 
 ```bash
-# 1. Backend
+# 1. Backend (starts the local PostgreSQL instance first when needed)
+cp backend/.env.example backend/.env  # first run only; fill in DB + API keys
 cd backend
-cp .env.example .env          # fill in DB + API keys
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-uvicorn api:app --host 0.0.0.0 --port 8000
+cd ..
+./start_backend.sh
 
-# 2. Admin + MFA setup
-python setup_admin.py          # sets password, prints MFA QR
+# 2. Admin + MFA setup (run from backend/)
+cd backend
+./venv/bin/python setup_admin.py
+cd ..
 
-# 3. Frontend
-cd ../frontend
+# 3. Frontend (development)
+cd frontend
 cp .env.example .env
-npm install && npm run build
+npm install
+npm run dev -- --host 127.0.0.1 --port 5177
 
 # 4. Run the full pipeline (ingest → process → enrich → score)
-./run_pipeline.sh
+cd ../backend
+./run_pipeline.sh --force
 ```
+
+Development URLs: dashboard `http://127.0.0.1:5177`, API docs `http://127.0.0.1:8006/docs`.
+For start/stop commands, Wazuh checks, backups, systemd auto-start, and nginx TLS deployment, see [the operations runbook](docs/OPERATIONS.md). Production builds use the same-origin `/api` proxy so credentials are not sent cross-origin.
+
+### Optional Wazuh / Elastic event forwarding
+
+SIEM ingestion is disabled until a dedicated secret is configured. Generate a token locally, place it in `backend/.env` as `SIEM_INGEST_TOKEN`, and restart the API. Do not reuse the dashboard password or JWT secret.
+
+```bash
+python -c 'import secrets; print(secrets.token_urlsafe(32))'
+python siem_forwarder.py /path/to/wazuh-alert.json wazuh
+```
+
+The forwarder reads `SIEM_API_URL` and `SIEM_INGEST_TOKEN` from the environment. It accepts one JSON event or newline-delimited JSON, sends the original payload to `/siem/ingest`, and never prints the token. Use `elastic` as the source name for an Elastic webhook/export payload. The dashboard's **SIEM Matches** page remains readable while ingestion is disabled. The included Wazuh custom integration was verified with a manager-generated level-10 SSH brute-force alert; setup and replay-safe verification are documented in the runbook.
+
+## ✅ Verification
+
+```bash
+# Offline SIEM unit tests
+backend/venv/bin/python -m unittest discover -s tests -v
+
+# Frontend production build and lint
+cd frontend && npm run build && npm run lint
+
+# Running-service smoke test
+cd .. && ./scripts/smoke_test.sh
+
+# Encrypted-permission PostgreSQL custom-format backup
+./scripts/backup_database.sh
+```
+
+Deployment readiness and rollback checks are tracked in [docs/DEPLOY_CHECKLIST.md](docs/DEPLOY_CHECKLIST.md). A short interview-ready architecture explanation is in [docs/INTERVIEW_GUIDE.md](docs/INTERVIEW_GUIDE.md).
 
 ---
 
@@ -194,7 +239,10 @@ npm install && npm run build
 - [x] Authenticated dashboard (MFA + TLS)
 - [x] Natural-language chatbot
 - [x] Full automation (daily cron pipeline)
-- [ ] MITRE ATT&CK technique mapping
+- [x] Threat correlation and evidence graph
+- [x] MITRE ATT&CK technique/software mapping
+- [x] Read-only AI-assisted investigation
+- [x] Wazuh/Elastic SIEM ingestion and CTI matching adapter
 - [ ] STIX/TAXII + firewall blocklist export
 - [ ] Time-series threat trends
 - [ ] n8n AI workflows (daily brief, smart alerts)
