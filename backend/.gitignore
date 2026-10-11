@@ -1,6 +1,9 @@
-# Secrets -- kabhi commit nahi
+# Secrets and local environment files
 .env
+.env.*
 *.env
+*.env.*
+!.env.example
 
 # Python
 venv/
