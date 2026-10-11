@@ -28,7 +28,7 @@ See [Verified Achievements](docs/VERIFIED_ACHIEVEMENTS.md) for the evidence matr
 | MITRE ATT&CK | STIX-based actor, software, tactic and technique mapping | **4,606** stored mappings in the verified lab capture |
 | AI investigation | Evidence-grounded, read-only investigation reports with deterministic fallback | FastAPI investigation endpoint and React analyst workflow |
 | Natural-language assistant | Project-aware IOC, CVE, APT, enrichment and ATT&CK questions mapped to guarded read-only queries | Local Ollama `llama3.2` assistant with query controls |
-| SIEM integration | Token-protected Wazuh/Elastic event ingestion and exact IOC/CVE matching | Wazuh level-10 SSH alert verified end to end; SIEM unit tests pass |
+| Real-time SIEM correlation | Wazuh provides real-time monitoring and alerts; incoming events are matched against our stored, enriched CTI (IOCs/CVEs). Matches are surfaced as potential live security issues for analyst investigation—not automatic proof of compromise. | Token-protected Wazuh/Elastic ingestion; Wazuh level-10 SSH alert verified end to end; SIEM unit tests pass |
 | Security | bcrypt password hashing, TOTP MFA, JWT sessions, TLS reverse proxy, CORS and security headers | Auth modules, nginx deployment and HTTPS lab |
 | Operations | User-level systemd services, Wazuh SSH tunnel, pipeline monitoring, smoke test, database backup/restore | Deployment scripts and operations runbook |
 | API-cost control | Scheduled refresh can be enabled/disabled so VirusTotal/GreyNoise quotas are not exhausted | Refresh-control script and documented commands |
@@ -98,7 +98,7 @@ Ransomware feeds · enrichment APIs         │
 - **Correlations:** pivot across indicators, malware, actors, CVEs and source sightings.
 - **MITRE ATT&CK:** inspect tactic coverage and actor-to-technique/software relationships.
 - **AI Investigation:** generate a bounded analyst report only from stored evidence.
-- **SIEM Matches:** ingest Wazuh/Elastic JSON, preserve the event and show exact local CTI matches.
+- **SIEM Matches:** ingest real-time Wazuh/Elastic alerts, preserve event provenance, correlate alert indicators against the existing enriched CTI database, and flag matches as potential active security issues for analyst review.
 
 ## Security controls
 
